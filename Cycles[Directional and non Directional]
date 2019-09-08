@@ -136,13 +136,23 @@ bool Graph::isCyclicUtilDir(int v, bool visited[], bool stack[])
 
 			}
 
-			if (stack[*i])// IF you find the item already in the stack
+			if (stack[*i])// IF you find the item already in the stack -- Step X
 				return true;
 
 		}
 
 
 	stack[v] = false;// Removing vertex from the stack because you have reached a dead end track and need to back track - Refer link 3
+
+	// When you reach a dead end. If you dont remove from the stack. When it comes out of that iterations call, the step X will resolve as true
+	//Edge case
+
+
+
+
+
+
+
 	return false;
 
 }
@@ -192,12 +202,13 @@ int main()
 
 	// Try directional Graph
 
-	Graph g(4);
+	Graph g(5);
 	g.addDirectionalEdge(0, 1);
-	g.addDirectionalEdge(0, 2);
 	g.addDirectionalEdge(1, 2);
-	g.addDirectionalEdge(2, 3);
-	g.addDirectionalEdge(3, 3);
+	g.addDirectionalEdge(0, 2);
+	g.addDirectionalEdge(1, 3);
+	g.addDirectionalEdge(3, 4);
+	g.addDirectionalEdge(4, 2);
 
 	if (g.isCyclicindirectional())
 		cout << "Directional Graph contains cycle";

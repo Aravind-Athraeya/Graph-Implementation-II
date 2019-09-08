@@ -1,0 +1,215 @@
+// ConsoleApplication2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+
+#include <iostream>
+#include<conio.h>
+#include <sstream>
+#include<stdio.h>
+#include<stdlib.h>
+#include <queue>
+#include <unordered_set>
+
+using namespace std;
+
+#define N 9
+#define M 1
+
+// Graphs - Yay!//
+//Link 2 - https://stackoverflow.com/questions/2661053/isnt-an-iterator-in-c-a-kind-of-a-pointer
+// Link 3 -  https://www.geeksforgeeks.org/graph-and-its-representations/ -- Adjacency list
+// Link 4 - https://www.youtube.com/watch?v=AK7BuT5MgU0
+
+class Graph
+{
+	int V;    // No. of vertices 
+	list<int> *adj;    // Pointer to an array containing adjacency lists 
+	bool isCyclicUtilUnDir(int v, bool visited[], int parent); // for undirectional use parent --  because iterator can find the node
+	bool isCyclicUtilDir(int v, bool visited[], bool stack[]); // For directional use stack --  because iterator does not know who visited is not a parent
+
+public:
+	Graph(int V);   // Constructor 
+	void addUnDirectionalEdge(int v, int w);   // to add an edge to graph 
+	void addDirectionalEdge(int v, int w);   // to add an edge to graph 
+	bool isCyclicinUndirectional();
+	bool isCyclicindirectional();
+};
+
+
+Graph::Graph(int V)
+{
+	this->V = V;
+	adj = new list<int>[V];
+}
+
+void Graph::addUnDirectionalEdge(int v, int w)
+{
+	adj[v].push_back(w); // Add w to v’s list. 
+	adj[w].push_back(v); // Add v to w’s list. 
+}
+
+// How lists are pushed into the list - Refer link 3.
+
+void Graph::addDirectionalEdge(int v, int w)
+{
+	adj[v].push_back(w); // Add w to v’s list. 
+}
+
+
+bool Graph::isCyclicUtilUnDir(int v, bool visited[], int parent)
+{
+
+
+	// Mark the current node as visited 
+	visited[v] = true;
+
+
+	// Recur for all the vertices adjacent to this vertex 
+	list<int>::iterator i;
+	for (i = adj[v].begin(); i != adj[v].end(); ++i)
+	{
+		if (!visited[*i]) // With in iterators 'i' are dereferenced  Refer Link 2.
+		{
+			if (isCyclicUtilUnDir(*i, visited, v))
+				return true;
+
+
+		}
+
+		// If an adjacent is visited and not parent of current vertex, 
+		// then there is a cycle. 
+		if (*i != parent)// With in iterators 'i' are dereferenced  Refer Link 2.
+			return true;
+
+
+	}
+	return false;
+
+}
+
+
+
+
+bool Graph::isCyclicinUndirectional()
+{
+
+	bool *visited = new bool[V];
+	bool *Stack = new bool[V];
+
+	for (int i = 0; i < V; i++)
+	{
+		visited[i] = false;
+		Stack[i] = false;
+	}
+
+	// Call the recursive helper function to detect cycle in different 
+	// DFS trees 
+	for (int i = 0; i < V; i++)
+	if (!visited[i]) // Don't recur for u if it is already visited  -- Will come back on this
+	if (isCyclicUtilUnDir(i, visited, -1))
+		return true;
+
+	return false;
+}
+
+
+
+bool Graph::isCyclicUtilDir(int v, bool visited[], bool stack[])
+{
+
+
+		// Mark the current node as visited  &  Add to the stack
+		visited[v] = true;
+		stack[v] = true;
+
+
+		// Recur for all the vertices adjacent to this vertex 
+		list<int>::iterator i;
+		for (i = adj[v].begin(); i != adj[v].end(); ++i)
+		{
+			if (!visited[*i]) // With in iterators 'i' are dereferenced  Refer Link 2.
+			{
+				if (isCyclicUtilDir(*i, visited, stack))
+					return true;
+
+
+			}
+
+			if (stack[*i])// IF you find the item already in the stack
+				return true;
+
+		}
+
+
+	stack[v] = false;// Removing vertex from the stack because you have reached a dead end track and need to back track - Refer link 3
+	return false;
+
+}
+
+
+bool Graph::isCyclicindirectional()
+{
+
+	bool *visited = new bool[V];
+	bool *Stack = new bool[V];
+
+	for (int i = 0; i < V; i++)
+	{
+		visited[i] = false;
+		Stack[i] = false;
+	}
+
+	// Call the recursive helper function to detect cycle in different 
+	// DFS trees 
+	for (int i = 0; i < V; i++)
+	{
+
+		if (!visited[i]) // Commenting andmoving the functinality inside because it went back to parent and wrongly said cycle is present
+		if (isCyclicUtilDir(i, visited, Stack))
+			return true;
+
+
+	}
+	return false;
+}
+
+int main()
+{
+	// Create a graph given in the above diagram 
+	Graph g1(5);
+	g1.addUnDirectionalEdge(1, 0);
+	g1.addUnDirectionalEdge(0, 2);
+	g1.addUnDirectionalEdge(2, 1);
+	g1.addUnDirectionalEdge(0, 3);
+	g1.addUnDirectionalEdge(3, 4);
+	// try  undirectional graph
+	if (g1.isCyclicinUndirectional())
+		cout << "Undirectional Graph contains cycle";
+	else
+		cout << "Undirectional Graph doesn't contain cycle";
+
+
+	// Try directional Graph
+
+	Graph g(4);
+	g.addDirectionalEdge(0, 1);
+	g.addDirectionalEdge(0, 2);
+	g.addDirectionalEdge(1, 2);
+	g.addDirectionalEdge(2, 3);
+	g.addDirectionalEdge(3, 3);
+
+	if (g.isCyclicindirectional())
+		cout << "Directional Graph contains cycle";
+	else
+		cout << "Directional Graph doesn't contain cycle";
+
+
+
+
+
+
+	return 0;
+
+
+}

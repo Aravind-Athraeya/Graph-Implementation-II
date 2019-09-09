@@ -1,0 +1,180 @@
+// ConsoleApplication2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+
+#include <iostream>
+#include<conio.h>
+#include <sstream>
+#include<stdio.h>
+#include<stdlib.h>
+#include <queue>
+#include <unordered_set>
+
+using namespace std;
+//https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-using-stl-in-c/
+// https://www.geeksforgeeks.org/union-find/ -- For union find to detech cycle
+// Roy - https://www.youtube.com/watch?v=ID00PMy0-vE  && https://www.youtube.com/watch?v=n_t0a_8H8VY
+// Creating shortcut for an integer pair 
+typedef  pair<int, int> iPair;
+
+// Disjoint Set- Union find Algorthim - Uninon by rank and path compression
+// Disjoin set implementation have three steps - Make set, Union and Findset
+
+
+
+struct Graph
+{
+	int V,E;    // No. of ,edges	//list<int> *adj;    // Pointer to an array containing adjacency lists 
+	// Vector will be included since edge information also has to be stored
+	vector< pair<int, iPair> > edges;
+	Graph(int V , int E);   // Constructor 
+	void addEdge(int w, int u, int v);   // to add an edge to graph 
+	int KruskalMST(int v); // Minimum Spanning tree
+};
+
+
+Graph::Graph(int V, int E)
+{
+	this->V = V;
+	this->E = E;
+}
+
+void Graph::addEdge(int u, int v, int w)
+{
+	edges.push_back({ w, { u, v } });
+}
+// To represent Disjoint Sets or UnionFindAlgorthim
+struct UnionFindAlgorthim
+{
+	int *parent, *rnk;
+	int n;
+	UnionFindAlgorthim(int n)
+	{
+		//Step 1: Make set
+		/// Make each item and each set with itself  as its parent and set rank as zero
+		this->n = n;
+	parent = new int[n]; //Arrays 
+    rnk = new int[n]; // arrays
+
+		for (int i = 0; i <= n; i++)
+		{
+			rnk[i] = 0;
+			//every element is parent of itself 
+			parent[i] = i;
+		}
+
+
+	}
+	
+
+    //  Step 2: Find set - As in the find the representative of the set or parent in this case
+	int find(int i)
+	{
+		if (i != parent[i])
+			parent[i] = find(parent[i]);
+		return parent[i]; // Recursively go up until find the parent that is the parent of itself
+	}
+
+
+	//  Step 3: Union -- Take 2 variables as input, if both's representative are same, there is a cycle
+
+	// Union by rank 
+	void Union(int x, int y)
+	{
+		x = find(x), y = find(y);
+
+		if (rnk[x] > rnk[y])
+			parent[y] = x;
+		else // If rnk[x] <= rnk[y] 
+			parent[x] = y;
+
+		if (rnk[x] == rnk[y]) // Both set's representative ranks are same, so choose either on to make it as the other's parent
+		{
+			parent[x] = y;
+			rnk[y]++;
+		}
+		
+	}
+
+
+};
+
+
+//
+//Sort all the edges in non - decreasing order of their weight.
+//Pick the smallest edge.Check if it forms a cycle with the spanning tree formed so far.If cycle is not formed, include this edge.Else, discard it.
+//Repeat step#2 until there are(V - 1) edges in the spanning tree.
+
+int Graph::KruskalMST(int V)
+
+{
+	int finalvalue = 0;
+// Step 1 : Sort the Array
+	sort(edges.begin(), edges.end());
+
+
+
+	UnionFindAlgorthim ds(V); // Step 1 completed here
+
+
+	vector< pair<int, iPair> >::iterator it;
+	for (it = edges.begin(); it != edges.end(); it++)
+	{
+		int u = it->second.first;
+		int v = it->second.second;
+
+		int set_u = ds.find(u);  //Step 2
+		int set_v = ds.find(v);//Step 2
+
+
+		if (set_u != set_v)// If there is no cycle, add it to the list // Step 3
+		{
+			cout << u << " - " << v << endl; // Print the edge
+
+			finalvalue += it->first; //Add the edge cost
+			ds.Union(set_u, set_v);//Step 3
+
+		}
+
+
+
+
+	}
+	
+	return finalvalue;
+}
+
+int main()
+{
+	int V = 9, E = 14;
+	Graph g(V, E);
+
+	//  making above shown graph 
+	g.addEdge(0, 1, 4);
+	g.addEdge(0, 7, 8);
+	g.addEdge(1, 2, 8);
+	g.addEdge(1, 7, 11);
+	g.addEdge(2, 3, 7);
+	g.addEdge(2, 8, 2);
+	g.addEdge(2, 5, 4);
+	g.addEdge(3, 4, 9);
+	g.addEdge(3, 5, 14);
+	g.addEdge(4, 5, 10);
+	g.addEdge(5, 6, 2);
+	g.addEdge(6, 7, 1);
+	g.addEdge(6, 8, 6);
+	g.addEdge(7, 8, 7);
+
+
+	// Initialize Union- Find -- Minim spaning Tree
+	int finalvalue = g.KruskalMST(V);
+	cout << finalvalue;
+
+	
+
+
+	return 0;
+
+
+}

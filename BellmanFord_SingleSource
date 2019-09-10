@@ -1,0 +1,156 @@
+// ConsoleApplication2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+
+#include <iostream>
+#include<conio.h>
+#include <sstream>
+#include<stdio.h>
+#include<stdlib.h>
+#include <queue>
+#include <unordered_set>
+
+using namespace std;
+//https://www.youtube.com/watch?v=-mOEd_3gTK0
+
+
+typedef  pair<int, int> iPair;
+
+// Disjoint Set- Union find Algorthim - Uninon by rank and path compression
+// Disjoin set implementation have three steps - Make set, Union and Findset
+
+
+
+struct Graph
+{
+	int V,E;    // No. of ,edges	//list<int> *adj;    // Pointer to an array containing adjacency lists 
+	// Vector will be included since edge information also has to be stored
+	vector< pair<int, iPair> > edges;
+	Graph(int V , int E);   // Constructor 
+	void addEdge(int w, int u, int v);   // to add an edge to graph 
+	int BellmanFord(int v); // Minimum Spanning tree
+};
+
+
+Graph::Graph(int V, int E)
+{
+	this->V = V;
+	this->E = E;
+}
+
+void Graph::addEdge(int u, int v, int w)
+{
+	edges.push_back({ w, { u, v } });
+}
+
+//
+//Sort all the edges in non - decreasing order of their weight.
+//Pick the smallest edge.Check if it forms a cycle with the spanning tree formed so far.If cycle is not formed, include this edge.Else, discard it.
+//Repeat step#2 until there are(V - 1) edges in the spanning tree.
+
+int Graph::BellmanFord(int V)
+
+{
+	int finalvalue = 0;
+	int* distance  = new int[V]; //Arrays 
+
+	// Bellman Ford -For V-1 finds the shortest distance even with negative edges
+	// But in the vth iteration also if updates, then there is a negative weight cycle.
+	// Single source algorthim - Find the distance of all nodes after v-1 iterations
+	//Assumes all nodes except the source are in infinite distance from it and gets updated on each iteration.
+
+
+
+	// Step 1: Set infinite
+
+	for (int i = 0; i < V; i++)
+	{
+		if (i == 0)
+		  distance[i] = 0;// Source
+		else
+			distance[i] = INT_MAX;// Others
+		
+	}
+
+
+
+
+	// Step 2: Run for v-1 iterations
+	// 5 vertices =  4 iterations---- 0 -3 index runs -- =  4 iterations
+
+	for (int u = 0; u < V - 1; u++) // for each vertex -- till V-1 iteratios. After V-1, it still changes then there is negative edge cycle
+	{
+		vector< pair<int, iPair> >::iterator it;
+		for (it = edges.begin(); it != edges.end(); it++) // For each edge
+		{
+			int weight = it->first;
+			int x = it->second.first;
+			int y = it->second.second;
+			if (distance[x] != INT_MAX && distance[x] + weight < distance[y])
+				distance[y] = distance[x] + weight;
+
+		}
+	}
+
+
+
+	// IN step 3 - No update will happen till v-1 so point of no return will not be called
+	// IF there is a negative edge cycle, then point of no return will be executed.
+	// 	Step 3 b- Check if there is a negative edge cycle
+	vector< pair<int, iPair> >::iterator it;
+	for (it = edges.begin(); it != edges.end(); it++) // For each edge
+	{
+		int weight = it->first;
+		int x = it->second.first;
+		int y = it->second.second;
+		if (distance[x] != INT_MAX && distance[x] + weight < distance[y])
+		{
+
+			// Point of no return
+			distance[y] = distance[x] + weight;
+			cout << "Graph contains negative"
+				" weight cycle"
+				<< endl;
+		}
+			
+
+	}
+
+	cout << "Vertex Distance from Source" << endl;
+	for (int i = 0; i < V; i++)
+		cout << i << "\t\t" << distance[i] << endl;
+
+
+
+
+	return finalvalue;
+}
+
+int main()
+{
+	int V = 5, E = 14;
+	Graph g(V, E);
+
+	//  making above shown graph 
+	g.addEdge(0, 1, -1);
+	g.addEdge(0, 2, 4);
+	g.addEdge(1, 2, 3);
+	g.addEdge(1, 3, 2);
+	g.addEdge(1, 4 , 2);
+	g.addEdge(3, 2, 5);
+	g.addEdge(3,1, 1);
+	g.addEdge(4, 3, -3);
+
+
+	// Initialize Union- Find -- Minim spaning Tree
+	int finalvalue = g.BellmanFord(V);
+	cout << finalvalue;
+
+	
+
+
+	return 0;
+
+
+}

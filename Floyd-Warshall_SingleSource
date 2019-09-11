@@ -1,0 +1,107 @@
+// ConsoleApplication2.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+
+#include <iostream>
+#include<conio.h>
+#include <sstream>
+#include<stdio.h>
+#include<stdlib.h>
+#include <queue>
+#include <unordered_set>
+
+using namespace std;
+//https://www.geeksforgeeks.org/floyd-warshall-algorithm-dp-16/
+// Floyd Varshall is used to find difference than 
+// Run time - V *  V * V -- Because three iterations 
+// Graph- Matrix implementation
+// Floyd- Warshall - 1) While running, current node is considered as an intermediate node.  2) distance matrix is used for solution
+// Bellman node - 2) While running node is considered as source vertex. 2) distance matrix is used for solution
+// k is the intermediate vertex
+
+
+void printSolution(int dist[][4])
+{
+	cout << "The following matrix shows the shortest distances"
+		" between every pair of vertices \n";
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			if (dist[i][j] == INT_MAX)
+				cout << "INF" << "     ";
+			else
+				cout << dist[i][j] << "     ";
+		}
+		cout << endl;
+	}
+}
+
+
+
+void FlyodWarshall(int graph[][4])
+{
+
+	int distance[4][4];
+	// Step 1 -- Initialize the distance array with the current values
+
+
+	for (int a = 0; a < 4; a++)
+			for (int b = 0;  b < 4; b++)
+		distance[a][b] = graph[a][b];
+
+
+
+	// Step 2 -- This is wrong because, when k is the final param  -- ??
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	for (int j = 0; j < 4; j++)
+	//	{
+	//		for (int k = 0; k < 4; k++)
+	//		{
+	//			if (distance[i][j] > distance[i][k] + distance[k][j])
+	//				distance[i][j] = distance[i][k] + distance[k][j];
+	//		}
+	//	}
+	//}
+
+
+			for (int k = 0; k < 4; k++)
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					for (int j = 0; j < 4; j++)
+					{
+						if (distance[i][j] > distance[i][k] + distance[k][j])
+							distance[i][j] = distance[i][k] + distance[k][j];
+					}
+				}
+			}
+	
+
+//	Just print
+	printSolution(distance);
+
+}
+
+
+
+
+int main()
+{
+// Matrix implmentation
+
+
+	int graph[4][4] = { 
+		{ 0, 5, INT_MAX, 10 },
+		{ INT_MAX, 0, 3, INT_MAX },
+		{ INT_MAX, INT_MAX, 0, 1 },
+		{ INT_MAX, INT_MAX, INT_MAX, 0 }
+	};
+	
+	FlyodWarshall(graph);
+	return 0;
+
+
+}

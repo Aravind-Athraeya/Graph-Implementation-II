@@ -1,0 +1,91 @@
+// ConsoleApplication2.cpp : Defines the entry point for the console application.
+//
+#include "stdafx.h"
+#include <set>
+#include <iostream>
+#include<conio.h>
+#include <sstream>
+#include<stdio.h>
+#include<stdlib.h>
+#include <queue>
+#include <unordered_set>
+
+using namespace std;
+//https://www.geeksforgeeks.org/find-the-ordering-of-tasks-from-given-dependencies/
+
+
+vector<unordered_set<int> > make_graph(int numTasks,
+	vector<pair<int, int> >& prerequisites)
+{
+	vector<unordered_set<int> > graph(numTasks);
+	for (auto pre : prerequisites)
+		graph[pre.second].insert(pre.first);
+
+	return graph;
+}
+// in-degree (number of incoming edges)   0-> 1 - > 2  - > 3
+//Traverse the list for every node and then increment the in-degree of all the nodes connected to it by 1.
+vector<int> compute_indegree(vector<unordered_set<int> >& graph)
+{
+	vector<int> degrees(graph.size(), 0);
+	for (auto node : graph)
+	for (int edge : node)
+		degrees[edge]++;
+	return degrees;
+}
+
+
+
+vector<int> findSeqOrder(int numTasks,
+	vector<pair<int, int>> &prerequisites)
+{
+	// Topological osrting - Kahn'a Algorthim
+
+	vector<unordered_set<int>> graph = make_graph(numTasks, prerequisites);
+	 // Step 1 - Compute the indegree
+	vector<int> degrees = compute_indegree(graph);
+	queue<int> zeros;
+	// Step 2 - push 0th degree tem, if no item then there is a cycle
+	for (int i = 0; i < numTasks; i++)
+	if (!degrees[i])
+		zeros.push(i);
+
+
+	vector<int> toposort;
+
+	//Step 3 - topological sort
+
+	for (int i = 0; i < numTasks; i++) {
+		if (zeros.empty())
+			return{};
+		// Extract the 0th degree element and add to the sorted list
+		int zero = zeros.front();
+		zeros.pop();
+		toposort.push_back(zero);
+		for (int neigh : graph[zero]) {
+			if (!--degrees[neigh]) // Decrement
+				zeros.push(neigh);
+		}
+	}
+
+	return toposort;
+	//vector<unordered_set<int> > graph = make_graph(numTasks, prerequisites);
+}
+int main()
+{
+
+	int numTasks = 4;
+	vector<pair<int, int> > JobSeq;
+
+	JobSeq.push_back(make_pair(1, 0));
+	JobSeq.push_back(make_pair(2, 1));
+	JobSeq.push_back(make_pair(3, 2));
+
+	vector<int> v = findSeqOrder(numTasks, JobSeq);
+
+
+
+	return 0;
+
+
+}

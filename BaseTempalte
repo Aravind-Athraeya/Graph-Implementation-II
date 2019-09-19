@@ -33,6 +33,7 @@ public:
 Graph::Graph(int V)
 {
 	this->V = V;
+	
 	adj = new list<int>[V];
 }
 

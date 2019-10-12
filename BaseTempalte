@@ -6,7 +6,7 @@
 #include<conio.h>
 #include <sstream>
 #include<stdio.h>
-#include<stdlib.h>
+#include<stdlib.h> 
 #include <queue>
 #include <unordered_set>
 

@@ -1,0 +1,51 @@
+
+#include "stdafx.h"
+#include <set>
+#include <iostream>
+#include<conio.h>
+#include <sstream>
+#include<stdio.h> 
+#include<stdlib.h>
+#include <queue>
+#include <unordered_set>
+#include <stack>
+using namespace std;
+
+//https://www.geeksforgeeks.org/given-sorted-dictionary-find-precedence-characters/
+
+class Graph
+{
+	int V;
+	list<int> *adj;
+	void topologicalSortUtil(int v, bool visited[], stack<int> &Stack);
+
+public:
+	Graph(int V);
+	void addEdge(int v, int w);
+	void topologicalSort();
+};
+
+Graph::Graph(int V)
+{
+	this->V = V;
+	adj = new list<int>[V]; //adjacency listsList - Pakathu veetu karan
+}
+
+void printOrder(string words[], int n, int alpha)
+{
+	// Create a Graph
+	Graph g(alpha);
+	for (int i = 0; i < n - 1; i++)
+	{
+	}
+
+}
+
+// Alien Dictionary - Graph
+int main()
+{
+	string words[] = { "caa", "aaa", "aab" };
+	printOrder(words, 3, 3);
+	return 0;
+
+}

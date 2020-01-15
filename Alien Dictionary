@@ -31,15 +31,37 @@ Graph::Graph(int V)
 	adj = new list<int>[V]; //adjacency listsList - Pakathu veetu karan
 }
 
+void Graph::addEdge(int v, int w)
+{
+	adj[v].push_back(w); 
+}
+
+int min(int x, int y)
+{
+	return (x < y) ? x : y;
+}
+
+
 void printOrder(string words[], int n, int alpha)
 {
 	// Create a Graph
 	Graph g(alpha);
+
 	for (int i = 0; i < n - 1; i++)
 	{
+		string word1 = words[i], word2 = words[i + 1];
+		for (int j = 0; j < min(word1.length(), word2.length()); j++)
+		{
+			if (word1[j] != word2[j])
+			{
+				g.addEdge(word1[j] - 'a', word2[j] - 'a');
+				break;
+			}
+		}
 	}
-
+	// Sorting pending
 }
+
 
 // Alien Dictionary - Graph
 int main()

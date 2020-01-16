@@ -45,12 +45,12 @@ int min(int x, int y)
 void Graph::topologicalSortUtil(int v, bool visited[], stack<int> &Stack)
 {
 	visited[v] = true;
-
+	// V is node and not the index of the list
 	list<int>::iterator i;
 	for (i = adj[v].begin(); i != adj[v].end(); ++i)
-	if (!visited[*i])
+	if (!visited[*i]){
 		topologicalSortUtil(*i, visited, Stack);
-
+	}
 	Stack.push(v);
 }
 

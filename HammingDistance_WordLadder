@@ -1,1 +1,122 @@
-//
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Lucene.Net.Support;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+
+namespace ConsoleApp2
+{
+
+ 
+    class Program
+    {
+        static void Main(string[] args)
+        {
+
+            // Hamming Distance - Leveinshtein distance  - minimum edits to convert strings -- Using DP
+            // Word ladder using Graph -- C#
+            HashSet<String> D = new HashSet<String>();
+            D.Add("poon");
+            D.Add("plee");
+            D.Add("same");
+            D.Add("poie");
+            D.Add("plie");
+            D.Add("poin");
+            D.Add("plea");
+            String start = "toon";
+            String target = "plea";
+            Console.Write("Length of shortest chain is: "
+                + WordLadderUsingBFS(start, target, D));
+
+
+        }
+
+
+        //DFS(tree) and BFS (Graph) - Because in graph we have exponential number if paths in graphs, in trees only two nodes have unique path.  
+        static int WordLadderUsingBFS(String start,
+                            String target,
+                            HashSet<String> D)
+        {
+
+            if (start == target)
+                return 0;
+            // If the target String is not
+            // present in the dictionary
+            if (!D.Contains(target))
+                return 0;
+
+            // To store the current chain length
+            // and the length of the words
+            int level = 0, wordlength = start.Length;
+
+            // Push the starting word into the queue
+            List<String> Q = new List<String>();
+            Q.Add(start);
+
+            // While the queue is non-empty
+            while (Q.Count != 0)
+            {
+
+                // Increment the chain length
+                ++level;
+
+                // Current size of the queue
+                int sizeofQ = Q.Count;
+
+                // Since the queue is being updated while
+                // it is being traversed so only the
+                // elements which were already present
+                // in the queue before the start of this
+                // loop will be traversed for now
+                for (int i = 0; i < sizeofQ; ++i)
+                {
+
+                    // Remove the first word from the queue
+                    char[] word = Q[0].ToCharArray();
+                    Q.RemoveAt(0);
+
+                    // For every character of the word
+                    for (int pos = 0; pos < wordlength; ++pos)
+                    {
+
+                        // Retain the original character
+                        // at the current position
+                        char orig_char = word[pos];
+
+                        // Replace the current character with
+                        // every possible lowercase alphabet
+                        for (char c = 'a'; c <= 'z'; ++c)
+                        {
+                            word[pos] = c;
+
+                            // If the new word is equal
+                            // to the target word
+                            if (String.Join("", word).Equals(target))
+                                return level + 1;
+
+                            // Remove the word from the set
+                            // if it is found in it
+                            if (!D.Contains(String.Join("", word)))
+                                continue;
+                            D.Remove(String.Join("", word));
+
+                            // And push the newly generated word
+                            // which will be a part of the chain
+                            Q.Add(String.Join("", word));
+                        }
+
+                        // Restore the original character
+                        // at the current position
+                        word[pos] = orig_char;
+                    }
+                }
+            }
+            return 0;
+        }
+
+
+
+
+    }
+}

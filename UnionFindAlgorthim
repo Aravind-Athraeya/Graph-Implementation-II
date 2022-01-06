@@ -1,163 +1,119 @@
-// ConsoleApplication2.cpp : Defines the entry point for the console application.
-//
+// A union by rank and path compression
+// based program to detect cycle in a graph
+using System;
 
-#include "stdafx.h"
+class Graph {
+	public int V, E;
+	public Edge[] edge;
 
-#include <iostream>
-#include<conio.h>
-#include <sstream>
-#include<stdio.h>
-#include<stdlib.h>
-#include <queue>
-#include <unordered_set>
-
-using namespace std;
-//https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-using-stl-in-c/
-// https://www.geeksforgeeks.org/union-find/ -- For union find to detech cycle
-// Roy - https://www.youtube.com/watch?v=ID00PMy0-vE  && https://www.youtube.com/watch?v=n_t0a_8H8VY
-// Creating shortcut for an integer pair 
-typedef  pair<int, int> iPair;
-
-// Disjoint Set- Union find Algorthim - Uninon by rank and path compression
-// Disjoin set implementation have three steps - Make set, Union and Findset
-
-
-
-struct Graph
-{
-	int V,E;    // No. of ,edges	//list<int> *adj;    // Pointer to an array containing adjacency lists 
-	// Vector will be included since edge information also has to be stored
-	vector< pair<int, iPair> > edges;
-	Graph(int V , int E);   // Constructor 
-	void addEdge(int w, int u, int v);   // to add an edge to graph 
-	bool iscyclic(int v);
-};
-
-
-Graph::Graph(int V, int E)
-{
-	this->V = V;
-	this->E = E;
-}
-
-void Graph::addEdge(int u, int v, int w)
-{
-	edges.push_back({ w, { u, v } });
-}
-// To represent Disjoint Sets or UnionFindAlgorthim
-struct UnionFindAlgorthim
-{
-	int *parent, *rnk;
-	int n;
-	UnionFindAlgorthim(int n)
+	public Graph(int nV, int nE)
 	{
-		//Step 1: Make set
-		/// Make each item and each set with itself  as its parent and set rank as zero
-		this->n = n;
-	parent = new int[n]; //Arrays 
-    rnk = new int[n]; // arrays
-
-		for (int i = 0; i <= n; i++)
+		V = nV;
+		E = nE;
+		edge = new Edge[E];
+		for (int i = 0; i < E; i++)
 		{
-			rnk[i] = 0;
-			//every element is parent of itself 
-			parent[i] = i;
+			edge[i] = new Edge();
+		}
+	}
+
+	// class to represent edge
+	public class Edge {
+		public int src, dest;
+	}
+
+	// class to represent Subset
+	class subset
+	{
+		public int parent;
+		public int rank;
+	}
+
+	// A utility function to find
+	// set of an element i (uses
+	// path compression technique)
+	int find(subset[] subsets, int i)
+	{
+		if (subsets[i].parent != i)
+			subsets[i].parent
+				= find(subsets, subsets[i].parent);
+		return subsets[i].parent;
+	}
+
+	// A function that does union
+	// of two sets of x and y
+	// (uses union by rank)
+	void Union(subset[] subsets, int x, int y)
+	{
+		int xroot = find(subsets, x);
+		int yroot = find(subsets, y);
+
+		if (subsets[xroot].rank < subsets[yroot].rank)
+			subsets[xroot].parent = yroot;
+		else if (subsets[yroot].rank < subsets[xroot].rank)
+			subsets[yroot].parent = xroot;
+		else {
+			subsets[xroot].parent = yroot;
+			subsets[yroot].rank++;
+		}
+	}
+
+	// The main function to check whether
+	// a given graph contains cycle or not
+	int isCycle(Graph graph)
+	{
+		int V = graph.V;
+		int E = graph.E;
+
+		subset[] subsets = new subset[V];
+		for (int v = 0; v < V; v++)
+		{
+			subsets[v] = new subset();
+			subsets[v].parent = v;
+			subsets[v].rank = 0;
 		}
 
-
-	}
-	
-
-    //  Step 2: Find set - As in the find the representative of the set or parent in this case
-	int find(int i)
-	{
-		if (i != parent[i])
-			parent[i] = find(parent[i]);
-		return parent[i]; // Recursively go up until find the parent that is the parent of itself
-	}
-
-
-	//  Step 3: Union -- Take 2 variables as input, if both's representative are same, there is a cycle
-
-	// Union by rank 
-	void Union(int x, int y)
-	{
-		x = find(x), y = find(y);
-
-		if (rnk[x] > rnk[y])
-			parent[y] = x;
-		else // If rnk[x] <= rnk[y] 
-			parent[x] = y;
-
-		if (rnk[x] == rnk[y]) // Both set's representative ranks are same, so choose either on to make it as the other's parent
+		for (int e = 0; e < E; e++)
 		{
-			parent[x] = y;
-			rnk[y]++;
+			int x = find(subsets, graph.edge[e].src);
+			int y = find(subsets, graph.edge[e].dest);
+			if (x == y)
+				return 1;
+			Union(subsets, x, y);
 		}
-		
+		return 0;
 	}
 
-
-};
-
-bool Graph::iscyclic(int V)
-{
-	// Initialize 
-	UnionFindAlgorthim ds(V); // Step 1 completed here
-
-
-	vector< pair<int, iPair> >::iterator it;
-	for (it = edges.begin(); it != edges.end(); it++)
+	// Driver Code
+	static public void Main(String[] args)
 	{
-		int u = it->second.first;
-		int v = it->second.second;
+		/* Let us create the following graph
+			0
+			| \
+			| \
+			1-----2 */
 
-		int set_u = ds.find(u);  //Step 2
-		int set_v = ds.find(v);//Step 2
+		int V = 3, E = 3;
+		Graph graph = new Graph(V, E);
 
+		// add edge 0-1
+		graph.edge[0].src = 0;
+		graph.edge[0].dest = 1;
 
-		if (set_u == set_v)
-			return true;
+		// add edge 1-2
+		graph.edge[1].src = 1;
+		graph.edge[1].dest = 2;
 
+		// add edge 0-2
+		graph.edge[2].src = 0;
+		graph.edge[2].dest = 2;
 
-
-		ds.Union(set_u, set_v);//Step 3
-
+		if (graph.isCycle(graph) == 1)
+			Console.WriteLine("Graph contains cycle");
+		else
+			Console.WriteLine(
+				"Graph doesn't contain cycle");
 	}
-	
-	return false;
 }
 
-int main()
-{
-	int V = 9, E = 14;
-	Graph g(V, E);
-
-	//  making above shown graph 
-	g.addEdge(0, 1, 4);
-	g.addEdge(0, 7, 8);
-	g.addEdge(1, 2, 8);
-	g.addEdge(1, 7, 11);
-	g.addEdge(2, 3, 7);
-	g.addEdge(2, 8, 2);
-	g.addEdge(2, 5, 4);
-	g.addEdge(3, 4, 9);
-	g.addEdge(3, 5, 14);
-	g.addEdge(4, 5, 10);
-	g.addEdge(5, 6, 2);
-	g.addEdge(6, 7, 1);
-	g.addEdge(6, 8, 6);
-	g.addEdge(7, 8, 7);
-
-
-	// Initialize Union- Find
-	g.iscyclic(V);
-	cout << "Yes Cycle";
-
-	
-
-
-	return 0;
-
-
-}
+// This code

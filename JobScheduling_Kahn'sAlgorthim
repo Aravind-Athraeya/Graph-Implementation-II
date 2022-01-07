@@ -1,99 +1,90 @@
-public class Solution {
-    
-    public int[] FindOrder(int numCourses, int[][] prerequisites)
-    {
-        return new TopologicalGraph<int>(Enumerable.Range(0, numCourses).ToArray(), prerequisites).TopologicalSort().ToArray();
-    }
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-    /// <summary>
-    /// DAG used to model a topological sort
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class TopologicalGraph<T>
-    {
-        public class Node
-        {
-            public T val;
+namespace TopologicalSort {
+    static class Program {
+        static void Main() {
+            //
+            // digraph G {
+            //   "7"  -> "11"
+            //   "7"  -> "8"
+            //   "5"  -> "11"
+            //   "3"  -> "8"
+            //   "3"  -> "10"
+            //   "11" -> "2"
+            //   "11" -> "9"
+            //   "11" -> "10"
+            //   "8"  -> "9"
+            // }
 
-            // We keep track of the vertex dependencies y (x,y)
-            public LinkedList<Node> dependencies;
-            public int numPrerequisites;
-
-            public Node(T val)
-            {
-                this.val = val;
-                dependencies = new LinkedList<Node>();
-            }
+            var ret = TopologicalSort(
+                new HashSet<int>(new[] {7, 5, 3, 8, 11, 2, 9, 10}),
+                new HashSet<Tuple<int, int>>(
+                    new [] {
+                        Tuple.Create(7, 11),
+                        Tuple.Create(7, 8),
+                        Tuple.Create(5, 11),
+                        Tuple.Create(3, 8),
+                        Tuple.Create(3, 10),
+                        Tuple.Create(11, 2),
+                        Tuple.Create(11, 9),
+                        Tuple.Create(11, 10),
+                        Tuple.Create(8, 9)
+                    }
+                )
+            );
+            System.Diagnostics.Debug.Assert(ret.SequenceEqual(new[] {7, 5, 11, 2, 3, 8, 9, 10}));
         }
 
-        // Provides constant time removal for last
-        public Dictionary<T, Node> Vertexes;
+        /// <summary>
+        /// Topological Sorting (Kahn's algorithm) 
+        /// </summary>
+        /// <remarks>https://en.wikipedia.org/wiki/Topological_sorting</remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="nodes">All nodes of directed acyclic graph.</param>
+        /// <param name="edges">All edges of directed acyclic graph.</param>
+        /// <returns>Sorted node in topological order.</returns>
+        static List<T> TopologicalSort<T>(HashSet<T> nodes, HashSet<Tuple<T, T>> edges) where T : IEquatable<T> {
+            // Empty list that will contain the sorted elements
+            var L = new List<T>();
 
-        public TopologicalGraph(T[] nodes, T[][] prerequisites)
-        {
-            Vertexes = new Dictionary<T, Node>();
+            // Set of all nodes with no incoming edges
+            var S = new HashSet<T>(nodes.Where(n => edges.All(e => e.Item2.Equals(n) == false)));
 
-            // Create the Topological graph
-            foreach (var node in nodes)
-                AddVertex(nodeKey: node, node);
-            foreach (var prerequisite in prerequisites)
-                AddDependency(prerequisite[1], prerequisite[0]);
-        }
+            // while S is non-empty do
+            while (S.Any()) {
 
-        public void AddVertex(T nodeKey, T nodeValue)
-        {
-            if (Vertexes.ContainsKey(nodeKey))
-                throw new ArgumentException(nameof(nodeKey));
+                //  remove a node n from S
+                var n = S.First();
+                S.Remove(n);
 
-            Vertexes.Add(nodeKey, new Node(nodeValue));
-        }
+                // add n to tail of L
+                L.Add(n);
 
-        // (x, y)
-        // x is a prerequisite to y => y depends to x (y is a dependency)
-        public void AddDependency(T prerequisiteKey, T dependencyKey)
-        {
-            if (!Vertexes.ContainsKey(prerequisiteKey))
-                throw new ArgumentException(nameof(prerequisiteKey));
+                // for each node m with an edge e from n to m do
+                foreach (var e in edges.Where(e => e.Item1.Equals(n)).ToList()) {
+                    var m = e.Item2;
 
-            if (!Vertexes.ContainsKey(dependencyKey))
-                throw new ArgumentException(nameof(dependencyKey));
+                    // remove edge e from the graph
+                    edges.Remove(e);
 
-            Vertexes[prerequisiteKey].dependencies.AddLast(Vertexes[dependencyKey]);
-            Vertexes[dependencyKey].numPrerequisites++;
-        }
-
-        public List<T> TopologicalSort()
-        {
-            var topologicalList = new List<T>();
-
-            // Get nodes with no prerequisites
-            var noPrereqQueue = new Queue<Node>(
-                Vertexes.Where(kv => kv.Value.numPrerequisites == 0).Select(kv => kv.Value));
-
-            while (noPrereqQueue.Any())
-            {
-                var noPrereq = noPrereqQueue.Dequeue();
-                topologicalList.Add(noPrereq.val);
-
-                while (noPrereq.dependencies.Any())
-                {
-                    var dependency = noPrereq.dependencies.Last();
-                    noPrereq.dependencies.RemoveLast();
-
-                    dependency.numPrerequisites--;
-                    if (dependency.numPrerequisites == 0)
-                    {
-                        noPrereqQueue.Enqueue(dependency);
+                    // if m has no other incoming edges then
+                    if (edges.All(me => me.Item2.Equals(m) == false)) {
+                        // insert m into S
+                        S.Add(m);
                     }
                 }
             }
 
-            if (Vertexes.Values.Any(v => v.numPrerequisites > 0))
-            {
-                return new List<T>(); // dependency cycle
+            // if graph has edges then
+            if (edges.Any()) {
+                // return error (graph has at least one cycle)
+                return null;
+            } else {
+                // return L (a topologically sorted order)
+                return L;
             }
-
-            return topologicalList;
         }
     }
 }

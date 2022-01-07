@@ -1,91 +1,99 @@
-// ConsoleApplication2.cpp : Defines the entry point for the console application.
-//
-#include "stdafx.h"
-#include <set>
-#include <iostream>
-#include<conio.h>
-#include <sstream>
-#include<stdio.h>
-#include<stdlib.h>
-#include <queue>
-#include <unordered_set>
+public class Solution {
+    
+    public int[] FindOrder(int numCourses, int[][] prerequisites)
+    {
+        return new TopologicalGraph<int>(Enumerable.Range(0, numCourses).ToArray(), prerequisites).TopologicalSort().ToArray();
+    }
 
-using namespace std;
-//https://www.geeksforgeeks.org/find-the-ordering-of-tasks-from-given-dependencies/
+    /// <summary>
+    /// DAG used to model a topological sort
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class TopologicalGraph<T>
+    {
+        public class Node
+        {
+            public T val;
 
+            // We keep track of the vertex dependencies y (x,y)
+            public LinkedList<Node> dependencies;
+            public int numPrerequisites;
 
-vector<unordered_set<int> > make_graph(int numTasks,
-	vector<pair<int, int> >& prerequisites)
-{
-	vector<unordered_set<int> > graph(numTasks);
-	for (auto pre : prerequisites)
-		graph[pre.second].insert(pre.first);
+            public Node(T val)
+            {
+                this.val = val;
+                dependencies = new LinkedList<Node>();
+            }
+        }
 
-	return graph;
-}
-// in-degree (number of incoming edges)   0-> 1 - > 2  - > 3
-//Traverse the list for every node and then increment the in-degree of all the nodes connected to it by 1.
-vector<int> compute_indegree(vector<unordered_set<int> >& graph)
-{
-	vector<int> degrees(graph.size(), 0);
-	for (auto node : graph)
-	for (int edge : node)
-		degrees[edge]++;
-	return degrees;
-}
+        // Provides constant time removal for last
+        public Dictionary<T, Node> Vertexes;
 
+        public TopologicalGraph(T[] nodes, T[][] prerequisites)
+        {
+            Vertexes = new Dictionary<T, Node>();
 
+            // Create the Topological graph
+            foreach (var node in nodes)
+                AddVertex(nodeKey: node, node);
+            foreach (var prerequisite in prerequisites)
+                AddDependency(prerequisite[1], prerequisite[0]);
+        }
 
-vector<int> findSeqOrder(int numTasks,
-	vector<pair<int, int>> &prerequisites)
-{
-	// Topological osrting - Kahn'a Algorthim
+        public void AddVertex(T nodeKey, T nodeValue)
+        {
+            if (Vertexes.ContainsKey(nodeKey))
+                throw new ArgumentException(nameof(nodeKey));
 
-	vector<unordered_set<int>> graph = make_graph(numTasks, prerequisites);
-	 // Step 1 - Compute the indegree
-	vector<int> degrees = compute_indegree(graph);
-	queue<int> zeros;
-	// Step 2 - push 0th degree tem, if no item then there is a cycle
-	for (int i = 0; i < numTasks; i++)
-	if (!degrees[i])
-		zeros.push(i);
+            Vertexes.Add(nodeKey, new Node(nodeValue));
+        }
 
+        // (x, y)
+        // x is a prerequisite to y => y depends to x (y is a dependency)
+        public void AddDependency(T prerequisiteKey, T dependencyKey)
+        {
+            if (!Vertexes.ContainsKey(prerequisiteKey))
+                throw new ArgumentException(nameof(prerequisiteKey));
 
-	vector<int> toposort;
+            if (!Vertexes.ContainsKey(dependencyKey))
+                throw new ArgumentException(nameof(dependencyKey));
 
-	//Step 3 - topological sort
+            Vertexes[prerequisiteKey].dependencies.AddLast(Vertexes[dependencyKey]);
+            Vertexes[dependencyKey].numPrerequisites++;
+        }
 
-	for (int i = 0; i < numTasks; i++) {
-		if (zeros.empty())
-			return{};
-		// Extract the 0th degree element and add to the sorted list
-		int zero = zeros.front();
-		zeros.pop();
-		toposort.push_back(zero);
-		for (int neigh : graph[zero]) {
-			if (!--degrees[neigh]) // Decrement
-				zeros.push(neigh);
-		}
-	}
+        public List<T> TopologicalSort()
+        {
+            var topologicalList = new List<T>();
 
-	return toposort;
-	//vector<unordered_set<int> > graph = make_graph(numTasks, prerequisites);
-}
-int main()
-{
+            // Get nodes with no prerequisites
+            var noPrereqQueue = new Queue<Node>(
+                Vertexes.Where(kv => kv.Value.numPrerequisites == 0).Select(kv => kv.Value));
 
-	int numTasks = 4;
-	vector<pair<int, int> > JobSeq;
+            while (noPrereqQueue.Any())
+            {
+                var noPrereq = noPrereqQueue.Dequeue();
+                topologicalList.Add(noPrereq.val);
 
-	JobSeq.push_back(make_pair(1, 0));
-	JobSeq.push_back(make_pair(2, 1));
-	JobSeq.push_back(make_pair(3, 2));
+                while (noPrereq.dependencies.Any())
+                {
+                    var dependency = noPrereq.dependencies.Last();
+                    noPrereq.dependencies.RemoveLast();
 
-	vector<int> v = findSeqOrder(numTasks, JobSeq);
+                    dependency.numPrerequisites--;
+                    if (dependency.numPrerequisites == 0)
+                    {
+                        noPrereqQueue.Enqueue(dependency);
+                    }
+                }
+            }
 
+            if (Vertexes.Values.Any(v => v.numPrerequisites > 0))
+            {
+                return new List<T>(); // dependency cycle
+            }
 
-
-	return 0;
-
-
+            return topologicalList;
+        }
+    }
 }

@@ -1,1 +1,5 @@
-//
+// Strongly Connected - Intution
+ -- Have a stach and have a vivisted set
+ -- Do a DFS
+ -- Reverse the grapgh and start poppoing
+ The resuling sets are Stringly connected
